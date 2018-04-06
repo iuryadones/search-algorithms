@@ -1,4 +1,5 @@
 import random
+from collections import Counter
 
 class GA(object):
 
@@ -45,6 +46,28 @@ def method_initialization(population=None, chromosomes=None,
     else:
         raise NotImplemented
 
+def method_fitness(chromosomes, k, memoize_fitness):
+    chromosomes_fitness = []
+    for chromosome in chromosomes:
+        chromosome_str = ''.join([f'{gene}' for gene in chromosome])
+        chromosome_resp = memoize_fitness.get(chromosome_str)
+        if not chromosome_resp:
+            resp_side = [(chromosome.count(gene) - 1) for gene in chromosome]
+            resp_diag = [
+                [
+                    False,
+                    (row, col) != (chromosome[i], i)
+                ][abs(row-chromosome[i]) == abs(col - i)]
+                for i in range(k)
+                for col, row in enumerate(chromosome)
+            ]
+            chromosome_resp = sum(resp_side) + resp_diag.count(True)
+            memoize_fitness[chromosome_str] = chromosome_resp
+            chromosomes_fitness.append([chromosome, chromosome_resp])
+        else:
+            chromosomes_fitness.append([chromosome, chromosome_resp])
+    return sorted(chromosomes_fitness,
+                  key=lambda chromo_fitness: chromo_fitness[1])
 
 class Queens(GA):
 
@@ -60,6 +83,7 @@ class Queens(GA):
         self.prob_mating = kwargs.get('prob_mating', 0.2)
         self.select_parents = kwargs.get('select_parents', 2)
         self.pair_recobinition = kwargs.get('pair_recobinition', 2)
+        self.parents = []
 
     def initialization(self):
         """docstring for initialization."""
@@ -74,53 +98,91 @@ class Queens(GA):
 
         self.chromosomes = method_initialization(**kwarg)
 
-    def fitness(self):
+    def fitness(self, pairs_individuals=None):
         """docstring for fitness"""
-        chromosomes_fitness = []
-        for chromosome in self.chromosomes:
-            chromosome_str = ''.join([f'{gene}' for gene in chromosome])
-            chromosome_resp = self._memoize_fitness.get(chromosome_str)
-            if not chromosome_resp:
-                resp_side = [(chromosome.count(gene) - 1) for gene in chromosome]
-                resp_diag = [
-                    [
-                        False,
-                        (row, col) != (chromosome[i], i)
-                    ][abs(row-chromosome[i]) == abs(col - i)]
-                    for i in range(self.k)
-                    for col, row in enumerate(chromosome)
-                ]
-                chromosome_resp = sum(resp_side) + resp_diag.count(True)
-                self._memoize_fitness[chromosome_str] = chromosome_resp
-                chromosomes_fitness.append((chromosome, chromosome_resp))
-            else:
-                chromosomes_fitness.append((chromosome, chromosome_resp))
-        return sorted(chromosomes_fitness,
-                      key=lambda chromo_fitness: chromo_fitness[1])
-
-
-        return
+        if pairs_individuals:
+            return method_fitness(pairs_individuals, self.k, self._memoize_fitness)
+        else:
+            return method_fitness(self.chromosomes, self.k, self._memoize_fitness)
 
     def selection(self):
         """docstring for selection"""
-        parents = []
+        self.parents = []
         chromosomes = [
             [chromosome, fitness] for n, (chromosome, fitness) in
             enumerate(self.fitness())
-            if n < self.k*(self.select_parents/self.k)*(1+self.prob_selection)
+            if n < self.select_parents + 2
         ]
+
+
         for _ in range(self.select_parents):
-            chromosome = random.choice(chromosomes)
-            parents.append(chromosomes.pop(chromosomes.index(chromosome)))
-        return parents
+            chromosome = chromosomes.pop(
+                chromosomes.index(random.choice(chromosomes))
+            )
+            self.parents.append(self.chromosomes.pop(self.chromosomes.index(chromosome[0])))
 
     def crossover(self):
         """docstring for crossover"""
-        pass
+        pairs_individual = []
+        for _ in range(int(len(self.parents)/2)):
+            point = random.randint(1, 6)
+            individual_1 = self.parents.pop(
+                self.parents.index(random.choice(self.parents))
+            )
+            individual_2 = self.parents.pop(
+                self.parents.index(random.choice(self.parents))
+            )
+            new_individual_1 = individual_1[:point] + individual_2[point:]
+            new_individual_2 = individual_2[point:] + individual_1[:point]
+
+            pairs_individual.append(individual_1)
+            pairs_individual.append(individual_2)
+            pairs_individual.append(new_individual_1)
+            pairs_individual.append(new_individual_2)
+
+        pairs_individual = [
+            chromosome
+            for n, (chromosome, fitness) in enumerate(
+                self.fitness(pairs_individual)
+            ) if n < self.select_parents
+        ]
+
+        self.parents = pairs_individual
+        self.chromosomes.extend(pairs_individual)
 
     def mutation(self):
         """docstring for mutation"""
-        pass
+        individuals_mutants = []
+        points = random.randint(1, len(self.alleles)-1)
+        for _ in range(len(self.parents)):
+            chromosome = self.parents.pop(
+                self.parents.index(
+                    random.choice(self.parents)
+                )
+            )
+            random_choice = []
+            while len(random_choice) == points:
+                gene = random.randint(0, len(self.alleles)-1)
+                if not (gene in random_choice):
+                    chromosome[gene] = random.choice(self.alleles[gene])
+                    random_choice.append(gene)
+            individuals_mutants.append(chromosome)
+
+        individuals_mutants = [
+            chromosome
+            for n, (chromosome, fitness) in enumerate(
+                self.fitness(individuals_mutants)
+            ) if n < self.select_parents
+        ]
+
+        self.chromosomes.extend(individuals_mutants)
+        self.chromosomes = [
+            chromosome
+            for n, (chromosome, fitness) in enumerate(
+                self.fitness(self.chromosomes)
+            ) if n < self.population
+        ]
+
 
     @property
     def show_chromosomes(self):
@@ -198,12 +260,16 @@ class Queens(GA):
 
 
 def main():
-    queens = Queens(population=4, k=4)
+    queens = Queens(population=6, k=4)
     queens.initialization()
-    # queens.show_chromosomes
-    queens.fitness()
     queens.show_chromosomes_fitness
-    queens.selection()
+    for _ in range(10):
+        queens.selection()
+        queens.crossover()
+        queens.mutation()
+        queens.show_chromosomes_fitness
+        print(Counter([fitness[1] for fitness in queens.fitness()]))
+
 
 if __name__ == "__main__":
     main()
