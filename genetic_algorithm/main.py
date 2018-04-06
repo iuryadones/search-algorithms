@@ -56,6 +56,10 @@ class Queens(GA):
         self.alleles = kwargs.get(
             'alleles', [list(range(self.k)) for _ in range(self.k)])
         self._memoize_fitness = {}
+        self.prob_selection = kwargs.get('prob_selection', 0.2)
+        self.prob_mating = kwargs.get('prob_mating', 0.2)
+        self.select_parents = kwargs.get('select_parents', 2)
+        self.pair_recobinition = kwargs.get('pair_recobinition', 2)
 
     def initialization(self):
         """docstring for initialization."""
@@ -99,7 +103,16 @@ class Queens(GA):
 
     def selection(self):
         """docstring for selection"""
-        pass
+        parents = []
+        chromosomes = [
+            [chromosome, fitness] for n, (chromosome, fitness) in
+            enumerate(self.fitness())
+            if n < self.k*(self.select_parents/self.k)*(1+self.prob_selection)
+        ]
+        for _ in range(self.select_parents):
+            chromosome = random.choice(chromosomes)
+            parents.append(chromosomes.pop(chromosomes.index(chromosome)))
+        return parents
 
     def crossover(self):
         """docstring for crossover"""
@@ -190,7 +203,7 @@ def main():
     # queens.show_chromosomes
     queens.fitness()
     queens.show_chromosomes_fitness
-
+    queens.selection()
 
 if __name__ == "__main__":
     main()
