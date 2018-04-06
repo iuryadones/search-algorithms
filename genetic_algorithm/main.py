@@ -78,11 +78,15 @@ class Queens(GA):
             chromosome_resp = self._memoize_fitness.get(chromosome_str)
             if not chromosome_resp:
                 resp_side = [(chromosome.count(gene) - 1) for gene in chromosome]
-                resp_diag = []
-                for n, gene in enumerate(chromosome):
-                    print(gene, [n+gene == n**2+chromosome[i]**2 for i in
-                        range(self.k)])
-                chromosome_resp = sum(resp_side)
+                resp_diag = [
+                    [
+                        False,
+                        (row, col) != (chromosome[i], i)
+                    ][abs(row-chromosome[i]) == abs(col - i)]
+                    for i in range(self.k)
+                    for col, row in enumerate(chromosome)
+                ]
+                chromosome_resp = sum(resp_side) + resp_diag.count(True)
                 self._memoize_fitness[chromosome_str] = chromosome_resp
                 chromosomes_fitness.append((chromosome, chromosome_resp))
             else:
