@@ -1,32 +1,7 @@
-import random
+from algorithms.features.ga import Base
 from collections import Counter
-
-class GA(object):
-
-    """
-    Docstring for GA.
-        - Initialization
-        - Fitness
-        - Selection
-        - Crossover
-        - Mutation
-    """
-
-    def __init__(self, *args, **kwargs):
-        """
-        Define init
-            - length population
-            - type individual
-            - setattr chromosomes
-            - method of initialization
-            - method of selection
-            - method of crossover
-            - method of mutation
-        """
-
-        self.chromosomes = kwargs.get('chromosomes', [])
-        self.individual = kwargs.get('individual', list)
-        self.population = kwargs.get('population', 30)
+import random
+import pylab
 
 
 def method_initialization(population=None, chromosomes=None,
@@ -46,7 +21,7 @@ def method_initialization(population=None, chromosomes=None,
     else:
         raise NotImplemented
 
-def method_fitness(chromosomes, k, memoize_fitness):
+def method_fitness(chromosomes=None, k=None, memoize_fitness=None):
     chromosomes_fitness = []
     for chromosome in chromosomes:
         chromosome_str = ''.join([f'{gene}' for gene in chromosome])
@@ -69,12 +44,12 @@ def method_fitness(chromosomes, k, memoize_fitness):
     return sorted(chromosomes_fitness,
                   key=lambda chromo_fitness: chromo_fitness[1])
 
-class Queens(GA):
+class Queens(Base):
 
     """Docstring for K-Queens. """
 
     def __init__(self, *args, **kwargs):
-        GA.__init__(self, *args, **kwargs)
+        Base.__init__(self, *args, **kwargs)
         self.k = kwargs.get('k', 4)
         self.alleles = kwargs.get(
             'alleles', [list(range(self.k)) for _ in range(self.k)])
@@ -83,12 +58,15 @@ class Queens(GA):
         self.prob_mating = kwargs.get('prob_mating', 0.2)
         self.select_parents = kwargs.get('select_parents', 2)
         self.pair_recobinition = kwargs.get('pair_recobinition', 2)
+        self.fragment_inside = True
         self.parents = []
+        self.point_crossover = random.randint(1, len(self.alleles)-1)
+        self.points_mutation = random.randint(1, len(self.alleles)-1)
 
     def initialization(self):
         """docstring for initialization."""
 
-        kwarg = {
+        kwargs = {
             'population': self.population,
             'chromosomes': self.chromosomes,
             'individual': self.individual,
@@ -96,14 +74,22 @@ class Queens(GA):
             'method': random.choice
         }
 
-        self.chromosomes = method_initialization(**kwarg)
+        self.chromosomes = method_initialization(**kwargs)
 
     def fitness(self, pairs_individuals=None):
         """docstring for fitness"""
+
+        kwargs = {
+            'chromosomes': self.chromosomes,
+            'k': self.k,
+            'memoize_fitness': self._memoize_fitness
+        }
+
         if pairs_individuals:
-            return method_fitness(pairs_individuals, self.k, self._memoize_fitness)
+            kwargs['chromosomes'] = pairs_individuals
+            return method_fitness(**kwargs)
         else:
-            return method_fitness(self.chromosomes, self.k, self._memoize_fitness)
+            return method_fitness(**kwargs)
 
     def selection(self):
         """docstring for selection"""
@@ -111,41 +97,41 @@ class Queens(GA):
         chromosomes = [
             [chromosome, fitness] for n, (chromosome, fitness) in
             enumerate(self.fitness())
-            if n < self.select_parents + 2
+            if n < self.select_parents
         ]
-
 
         for _ in range(self.select_parents):
             chromosome = chromosomes.pop(
                 chromosomes.index(random.choice(chromosomes))
             )
-            self.parents.append(self.chromosomes.pop(self.chromosomes.index(chromosome[0])))
+            self.parents.append(
+                self.chromosomes.pop(self.chromosomes.index(chromosome[0]))
+            )
+
+        if self.fragment_inside:
+            for _ in range(self.select_parents):
+                self.chromosomes.remove(random.choice(self.chromosomes))
+
 
     def crossover(self):
         """docstring for crossover"""
         pairs_individual = []
         for _ in range(int(len(self.parents)/2)):
-            point = random.randint(1, 6)
+
             individual_1 = self.parents.pop(
                 self.parents.index(random.choice(self.parents))
             )
             individual_2 = self.parents.pop(
                 self.parents.index(random.choice(self.parents))
             )
-            new_individual_1 = individual_1[:point] + individual_2[point:]
-            new_individual_2 = individual_2[point:] + individual_1[:point]
 
-            pairs_individual.append(individual_1)
-            pairs_individual.append(individual_2)
+            new_individual_1 = individual_1[:self.point_crossover] \
+                + individual_2[self.point_crossover:]
+            new_individual_2 = individual_2[self.point_crossover:] \
+                + individual_1[:self.point_crossover]
+
             pairs_individual.append(new_individual_1)
             pairs_individual.append(new_individual_2)
-
-        pairs_individual = [
-            chromosome
-            for n, (chromosome, fitness) in enumerate(
-                self.fitness(pairs_individual)
-            ) if n < self.select_parents
-        ]
 
         self.parents = pairs_individual
         self.chromosomes.extend(pairs_individual)
@@ -153,7 +139,7 @@ class Queens(GA):
     def mutation(self):
         """docstring for mutation"""
         individuals_mutants = []
-        points = random.randint(1, len(self.alleles)-1)
+
         for _ in range(len(self.parents)):
             chromosome = self.parents.pop(
                 self.parents.index(
@@ -161,28 +147,14 @@ class Queens(GA):
                 )
             )
             random_choice = []
-            while len(random_choice) == points:
+            while len(random_choice) == self.points_mutation:
                 gene = random.randint(0, len(self.alleles)-1)
                 if not (gene in random_choice):
                     chromosome[gene] = random.choice(self.alleles[gene])
                     random_choice.append(gene)
             individuals_mutants.append(chromosome)
 
-        individuals_mutants = [
-            chromosome
-            for n, (chromosome, fitness) in enumerate(
-                self.fitness(individuals_mutants)
-            ) if n < self.select_parents
-        ]
-
         self.chromosomes.extend(individuals_mutants)
-        self.chromosomes = [
-            chromosome
-            for n, (chromosome, fitness) in enumerate(
-                self.fitness(self.chromosomes)
-            ) if n < self.population
-        ]
-
 
     @property
     def show_chromosomes(self):
@@ -260,16 +232,29 @@ class Queens(GA):
 
 
 def main():
-    queens = Queens(population=6, k=4)
+    queens = Queens(population=30, k=4, select_parents=4)
     queens.initialization()
     queens.show_chromosomes_fitness
-    for _ in range(10):
+
+    median = []
+    for step in range(100):
         queens.selection()
         queens.crossover()
         queens.mutation()
-        queens.show_chromosomes_fitness
-        print(Counter([fitness[1] for fitness in queens.fitness()]))
+        # queens.show_chromosomes_fitness
 
+        counter = Counter([fitness[1] for fitness in queens.fitness()])
+
+        add = sum(map(lambda item: item[0] * item[1], counter.items()))
+        median.append(add/queens.population)
+
+    pylab.title(
+        f'point-crossover: {queens.point_crossover}\n'
+        f'points-mutation: {queens.points_mutation}'
+    )
+    pylab.plot(median)
+    pylab.show()
+    pylab.close()
 
 if __name__ == "__main__":
     main()
