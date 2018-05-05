@@ -1,170 +1,127 @@
+#!/usr/bin/env python3
 from algorithms.features.ga import Base
-from algorithms.operator import initialization
-from algorithms.operator import fitness
-from algorithms.operator import selection
 from algorithms.operator import crossover
 from algorithms.operator import evaluation
+from algorithms.operator import fitness
+from algorithms.operator import initialization
 from algorithms.operator import mutation
+from algorithms.operator import selection
+from algorithms.views import ViewQueens
 from collections import Counter
+from view import ViewPlots
+
 import random
-import pylab
+import pylab as plt
 
-
-class Queens(Base):
+class Queens(Base, ViewQueens, ViewPlots):
 
     """Docstring for K-Queens. """
 
     def __init__(self, *args, **kwargs):
         Base.__init__(self, *args, **kwargs)
-
-    @property
-    def show_chromosomes(self):
-        bg_black = lambda text: f'\x1b[0;37;40m{text}\x1b[0m'
-        bg_white = lambda text: f'\x1b[0;30;47m{text}\x1b[0m'
-        fg_black = lambda text: f'\x1b[0;37;40m{text}\x1b[0m'
-        fg_white = lambda text: f'\x1b[0;30;47m{text}\x1b[0m'
-
-        _matrix = []
-
-        if self.k < 41:
-            for i,_ in enumerate(range(self.k)):
-                temp = []
-                for j,_ in enumerate(range(self.k)):
-                    if (i + j) % 2 == 0:
-                        temp.append(bg_black('   '))
-                    else:
-                        temp.append(bg_white('   '))
-                _matrix.append(temp)
-
-            for ind, chromosome in enumerate(self.chromosomes):
-                clone_m = [[n for n in m] for m in _matrix]
-
-                for col, row in enumerate(chromosome):
-                    if (col + row) % 2 == 0:
-                        clone_m[row][col] = fg_black(' Q ')
-                    else:
-                        clone_m[row][col] = fg_white(' Q ')
-
-                print(f'Individual: {ind}')
-                for m in clone_m:
-                    print(''.join(m))
-                print(end='\n')
-        else:
-            print('Show chromosomes for (k < 41)')
-
-        print(f'Population: {len(self.chromosomes)}\nK: {self.k}')
-
-    @property
-    def show_chromosomes_fitness(self):
-        bg_black = lambda text: f'\x1b[0;37;40m{text}\x1b[0m'
-        bg_white = lambda text: f'\x1b[0;30;47m{text}\x1b[0m'
-        fg_black = lambda text: f'\x1b[0;37;40m{text}\x1b[0m'
-        fg_white = lambda text: f'\x1b[0;30;47m{text}\x1b[0m'
-
-        _matrix = []
-
-        if self.k < 41:
-            for i,_ in enumerate(range(self.k)):
-                temp = []
-                for j,_ in enumerate(range(self.k)):
-                    if (i + j) % 2 == 0:
-                        temp.append(bg_black('   '))
-                    else:
-                        temp.append(bg_white('   '))
-                _matrix.append(temp)
-
-            for chromosome, chromo_fitness in self.fitness:
-                clone_m = [[n for n in m] for m in _matrix]
-
-                for col, row in enumerate(chromosome):
-                    if (col + row) % 2 == 0:
-                        clone_m[row][col] = fg_black(' Q ')
-                    else:
-                        clone_m[row][col] = fg_white(' Q ')
-
-                print(f'Fitness: {chromo_fitness}')
-                for m in clone_m:
-                    print(''.join(m))
-                print(end='\n')
-        else:
-            print('Show chromosomes for (k < 41)')
-
-        print(f'Population: {len(self.chromosomes)}\nK: {self.k}')
-
-    @property
-    def show_best_five_individuals(self):
-        individuals = sorted(
-            self._memoize_fitness.items(), key=lambda x: x[1]
-        )
-
-        print('\nShow 5 best individuals\n')
-
-        for n, individual in enumerate(individuals):
-            if n < 5:
-                print(individual)
-
-            else:
-                break
-
-        print(f'\nChecked Individuals: {len(individuals)}')
-
-    def plot_average_bests(self, median, bests):
-        pylab.title(
-            f'population={self.population}; '
-            f'k={self.k}\n'
-            f"batch_selection={self.params['selection']['batch']}; "
-            f"mating-point_crossover={self.params['crossover']['mating_point']}\n"
-            f"n-point_mutation={self.params['mutation']['n_point']}"
-        )
-        pylab.plot(median, 'b.-')
-        pylab.plot(bests, 'g.')
-        pylab.ylim(ymin=0)
-        pylab.xlim(xmin=0)
-        pylab.show()
-        pylab.close()
+        ViewQueens.__init__(self, *args, **kwargs)
+        ViewPlots.__init__(self, *args, **kwargs)
 
 
-def run(obj, MAX_INTERATIONS=100, MAX_CHECK_FITNESS=10000):
+def run_init(obj, MAX_ITERATIONS=100, MAX_CHECK_FITNESS=10000):
 
     obj.initialization
-    obj.show_chromosomes_fitness
+    # obj.show_chromosomes_fitness
 
     average = []
     average.append(obj.average)
     bests = []
     bests.extend(map(lambda b: b[1], obj.best()))
 
-    if not (bests[0] == 0):
+    for step in range(1, MAX_ITERATIONS):
+        obj.selection
+        obj.crossover
+        obj.mutation
+        obj.evaluation
 
-        for step in range(1, MAX_INTERATIONS):
-            obj.selection
-            obj.crossover
-            obj.mutation
-            obj.evaluation
+        bests.extend(map(lambda b: b[1], obj.best()))
+        average.append(obj.average)
 
-            bests.extend(map(lambda b: b[1], obj.best()))
-            average.append(obj.average)
+        if (obj._counter_fitness >= MAX_CHECK_FITNESS):
+            break
 
-            if (obj._counter_fitness >= MAX_CHECK_FITNESS) \
-                or (bests[step] == 0):
-                break
+    with open(f'./outputs/random_data_bests'
+              f'_max_i_{MAX_ITERATIONS}'
+              f'_max_cf_{MAX_CHECK_FITNESS}.dat', 'a') as arq:
 
-    obj.plot_average_bests(average, bests)
-    obj.show_chromosomes_fitness
-    obj.show_best_five_individuals
+        for best in bests:
+            arq.write(f'{best},')
 
+        arq.write('\n')
+
+    with open(f'./outputs/random_data_average'
+              f'_max_i_{MAX_ITERATIONS}'
+              f'_max_cf_{MAX_CHECK_FITNESS}.dat', 'a') as arq:
+
+        for av in average:
+            arq.write(f'{av},')
+
+        arq.write('\n')
+
+    # obj.plot_average_bests(average, bests)
+    # obj.show_chromosomes_fitness
+    # obj.show_best_five_individuals
+    # obj.plot_bests(bests)
+
+def run(obj, MAX_ITERATIONS=100, MAX_CHECK_FITNESS=10000):
+
+    # obj.show_chromosomes_fitness
+
+    average = []
+    average.append(obj.average)
+    bests = []
+    bests.extend(map(lambda b: b[1], obj.best()))
+
+    for step in range(1, MAX_ITERATIONS):
+        obj.selection
+        obj.crossover
+        obj.mutation
+        obj.evaluation
+
+        bests.extend(map(lambda b: b[1], obj.best()))
+        average.append(obj.average)
+
+        if (obj._counter_fitness >= MAX_CHECK_FITNESS):
+            break
+
+    with open(f'./outputs/data_bests'
+              f'_max_i_{MAX_ITERATIONS}'
+              f'_max_cf_{MAX_CHECK_FITNESS}.dat', 'a') as arq:
+
+        for best in bests:
+            arq.write(f'{best},')
+
+        arq.write('\n')
+
+    with open(f'./outputs/data_average'
+              f'_max_i_{MAX_ITERATIONS}'
+              f'_max_cf_{MAX_CHECK_FITNESS}.dat', 'a') as arq:
+
+        for av in average:
+            arq.write(f'{av},')
+
+        arq.write('\n')
+
+    # obj.plot_average_bests(average, bests)
+    # obj.plot_bests(bests)
+    # obj.show_chromosomes_fitness
+    # obj.show_best_five_individuals
 
 if __name__ == "__main__":
     K = 8
-
-    queens = Queens(
+    parameters = dict(
         alleles=[list(range(K)) for _ in range(K)],
         k=K,
         population=100,
         operator={
             'selection': selection.choice_pairs_in_batch,
             'crossover': crossover.one_point_mating,
-            'mutation': mutation.n_swap,
+            'mutation': mutation.n_gene,
             'fitness': fitness.n_queens,
             'initialization': initialization.choice_yourself,
             'evaluation': evaluation.elitism
@@ -178,14 +135,93 @@ if __name__ == "__main__":
                 'choice_individual': random.choice,
             },
             'mutation': {
-                'n_point': 1,
+                'n_point': 5,
                 'choice_gene': random.randint,
                 'choice_individual': random.choice,
+                'mutation_gene': random.choice,
             },
             'crossover': {
-                'mating_point': random.randint(1, 7),
+                'mating_point': 2,
             },
         }
     )
 
-    run(queens, MAX_INTERATIONS=100, MAX_CHECK_FITNESS=10000)
+    queens = Queens(**parameters)
+    queens.initialization
+
+    chromosomes_base = queens.chromosomes[::]
+
+    MAX_ITERATIONS = 100
+    MAX_CHECK_FITNESS = 10000
+    MAX_SIMULATIONS = 30
+
+    memoization = {}
+
+    for _ in range(MAX_SIMULATIONS):
+
+        memoization.update(queens._memoize_fitness)
+
+        queens._memoize_fitness.update(memoization)
+
+        print(len(queens._memoize_fitness.keys()))
+
+        queens = Queens(**parameters)
+        queens.chromosomes = chromosomes_base[::]
+
+        run(queens, MAX_ITERATIONS, MAX_CHECK_FITNESS)
+
+    with open(f'./outputs/data_bests'
+              f'_max_i_{MAX_ITERATIONS}'
+              f'_max_cf_{MAX_CHECK_FITNESS}.dat') as arq:
+
+        matrix = [
+            [int(item) for item in line.strip().split(',') if item]
+            for line in arq.readlines()
+        ]
+
+    matrix_sum = [0 for _ in range(100)]
+
+    for m in matrix:
+        for n, item in enumerate(m):
+            matrix_sum[n] += item
+
+    matrix_mean = list(map(lambda m: m/MAX_SIMULATIONS, matrix_sum))
+
+    plt.title(f'Uniq State Initial\n'
+              f'simulations={MAX_SIMULATIONS}; '
+              f'max_steps={MAX_ITERATIONS};\n'
+              f'max_chk_ftns={MAX_CHECK_FITNESS}; ')
+    plt.plot(matrix_mean, '.r')
+    plt.xlabel('Steps')
+    plt.ylabel('Fitness bests')
+    plt.show()
+    plt.close()
+
+    with open(f'./outputs/data_average'
+              f'_max_i_{MAX_ITERATIONS}'
+              f'_max_cf_{MAX_CHECK_FITNESS}.dat') as arq:
+
+        matrix = [
+            [float(item) for item in line.strip().split(',') if item]
+            for line in arq.readlines()
+        ]
+
+    matrix_sum = [0 for _ in range(100)]
+
+    for m in matrix:
+        for n, item in enumerate(m):
+            matrix_sum[n] += item
+
+    matrix_mean = list(map(lambda m: m/MAX_SIMULATIONS, matrix_sum))
+
+
+    plt.title(f'Uniq State Initial\n'
+              f'simulations={MAX_SIMULATIONS}; '
+              f'max_steps={MAX_ITERATIONS};\n'
+              f'max_chk_ftns={MAX_CHECK_FITNESS}; ')
+    plt.xlabel('Steps')
+    plt.ylabel('Fitness mean')
+    plt.plot(matrix_mean, '.r')
+
+    plt.show()
+    plt.close()

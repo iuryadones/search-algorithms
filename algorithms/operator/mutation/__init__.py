@@ -25,7 +25,7 @@ def n_gene(self):
         while (len(random_choice) < n_point):
             gene = choice_gene(0, len(self.alleles)-1)
             if not (gene in random_choice):
-                chromosome[gene] = mutation_gene(self, chromosome, gene)
+                chromosome[gene] += mutation_gene([-1, 1])
                 random_choice.append(gene)
 
         self.parents['mutation'].append(chromosome)
