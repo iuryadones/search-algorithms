@@ -88,17 +88,19 @@ def run(obj, MAX_ITERATIONS=100, MAX_CHECK_FITNESS=10000, name_file='stacked'):
         bests.extend(map(lambda b: b[1], obj.best()))
         average.append(obj.average)
 
-        if (obj._counter_fitness >= MAX_CHECK_FITNESS):
-            break
+        # if (obj._counter_fitness >= MAX_CHECK_FITNESS):
+        #     break
 
-    with open(''.join(['./outputs/data-bests_', name_file, '.dat']), 'a') as arq:
+    with open(''.join(['./outputs/data-bests_', name_file, '.dat']),
+              'a') as arq:
 
         for best in bests:
             arq.write(f'{best},')
 
         arq.write('\n')
 
-    with open(''.join(['./outputs/data-average_', name_file, '.dat']), 'a') as arq:
+    with open(''.join(['./outputs/data-average_', name_file, '.dat']),
+              'a') as arq:
 
         for av in average:
             arq.write(f'{av},')
@@ -112,6 +114,38 @@ def run(obj, MAX_ITERATIONS=100, MAX_CHECK_FITNESS=10000, name_file='stacked'):
 
 if __name__ == "__main__":
     K = 8
+    # parameters = dict(
+    #     alleles=[list(range(K)) for _ in range(K)],
+    #     k=K,
+    #     population=100,
+    #     operator={
+    #         'selection': selection.choice_pairs_in_batch,
+    #         'crossover': crossover.one_point_mating,
+    #         'mutation': mutation.n_gene,
+    #         'fitness': fitness.n_queens,
+    #         'initialization': initialization.choice_yourself,
+    #         'evaluation': evaluation.elitism
+    #     },
+    #     params={
+    #         'initialization': {
+    #             'choice': random.choice
+    #         },
+    #         'selection': {
+    #             'batch': 5,
+    #             'choice_individual': random.choice,
+    #         },
+    #         'mutation': {
+    #             'n_point': 2,
+    #             'choice_gene': random.randint,
+    #             'choice_individual': random.choice,
+    #             'mutation_gene': random.choice,
+    #         },
+    #         'crossover': {
+    #             'mating_point': 4,
+    #         },
+    #     }
+    # )
+
     parameters = dict(
         alleles=[list(range(K)) for _ in range(K)],
         k=K,
@@ -119,7 +153,7 @@ if __name__ == "__main__":
         operator={
             'selection': selection.choice_pairs_in_batch,
             'crossover': crossover.one_point_mating,
-            'mutation': mutation.n_gene,
+            'mutation': mutation.n_swap,
             'fitness': fitness.n_queens,
             'initialization': initialization.choice_yourself,
             'evaluation': evaluation.elitism
@@ -133,16 +167,46 @@ if __name__ == "__main__":
                 'choice_individual': random.choice,
             },
             'mutation': {
-                'n_point': 5,
+                'n_point': 2,
                 'choice_gene': random.randint,
                 'choice_individual': random.choice,
-                'mutation_gene': random.choice,
             },
             'crossover': {
-                'mating_point': 2,
+                'mating_point': 4,
             },
         }
     )
+
+    # parameters = dict(
+    #     alleles=[list(range(K)) for _ in range(K)],
+    #     k=K,
+    #     population=100,
+    #     operator={
+    #         'selection': selection.elitism,
+    #         'crossover': crossover.one_point_mating,
+    #         'mutation': mutation.n_gene,
+    #         'fitness': fitness.n_queens,
+    #         'initialization': initialization.choice_yourself,
+    #         'evaluation': evaluation.elitism
+    #     },
+    #     params={
+    #         'initialization': {
+    #             'choice': random.choice
+    #         },
+    #         'selection': {
+    #             'n_best': 16,
+    #         },
+    #         'mutation': {
+    #             'n_point': 2,
+    #             'choice_gene': random.randint,
+    #             'choice_individual': random.choice,
+    #             'mutation_gene': random.choice,
+    #         },
+    #         'crossover': {
+    #             'mating_point': 4,
+    #         },
+    #     }
+    # )
 
     queens = Queens(**parameters)
     queens.initialization
@@ -152,19 +216,27 @@ if __name__ == "__main__":
     MAX_ITERATIONS = 100
     MAX_CHECK_FITNESS = 10000
     MAX_SIMULATIONS = 30
-    DATETIME = datetime.datetime.utcnow().isoformat(sep='T')
+    DATETIME = datetime.datetime.utcnow().isoformat()
+
+    rtn = lambda items: ''.join([f'{k}:{v}_' for k,v in items])
 
     name_file = (
-        f'date_simulation_{DATETIME}'
+        f'date_run_{DATETIME}'
         f'_max-steps_{MAX_ITERATIONS}'
         f'_max-checks-fitness_{MAX_CHECK_FITNESS}'
         f'_max-simulations_{MAX_SIMULATIONS}'
-        f'_ops_{queens.operator.get("selection").__name__}'
-        f'_ops_{queens.operator.get("crossover").__name__}'
-        f'_ops_{queens.operator.get("mutation").__name__}'
-        f'_ops_{queens.operator.get("fitness").__name__}'
-        f'_ops_{queens.operator.get("initialization").__name__}'
-        f'_ops_{queens.operator.get("evaluation").__name__}'
+        f'_initialization_{queens.operator.get("initialization").__name__}'
+        # f'_params_{rtn(queens.params.get("initialization").items())}'
+        f'_fitness_{queens.operator.get("fitness").__name__}'
+        # f'_params_{rtn(queens.params.get("fitness").items())}'
+        f'_selection_{queens.operator.get("selection").__name__}'
+        # f'_params_{rtn(queens.params.get("selection").items())}'
+        f'_crossover_{queens.operator.get("crossover").__name__}'
+        # f'_params_{rtn(queens.params.get("crossover").items())}'
+        f'_mutation_{queens.operator.get("mutation").__name__}'
+        # f'_params_{rtn(queens.params.get("mutation").items())}'
+        f'_evaluation_{queens.operator.get("evaluation").__name__}'
+        # f'_params_{rtn(queens.params.get("evaluation").items())}'
     )
 
     memoization = {}

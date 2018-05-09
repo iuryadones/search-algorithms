@@ -9,7 +9,6 @@ if __name__ == "__main__":
 
     list_files = os.listdir(pathout)
 
-
     for dataset in list_files:
         path = pathout + dataset
 
@@ -26,13 +25,21 @@ if __name__ == "__main__":
 
             matrix_sum = [0 for _ in range(100)]
 
+            plt.title('Simulations all')
+
             for m in matrix:
+                plt.plot(m)
                 for n, item in enumerate(m):
                     matrix_sum[n] += item
 
+            plt.xlabel('Steps')
+            plt.ylabel('Fitness bests')
+            plt.show()
+            plt.close()
+
             matrix_mean = list(map(lambda m: m/len(matrix), matrix_sum))
 
-            plt.title('Simulations')
+            plt.title('Simulations mean')
             plt.plot(matrix_mean, '.r')
             plt.xlabel('Steps')
             plt.ylabel('Fitness bests')
@@ -50,14 +57,23 @@ if __name__ == "__main__":
 
             matrix_sum = [0 for _ in range(100)]
 
+            plt.title('Simulations all')
+
             for m in matrix:
+                plt.plot(m)
+
                 for n, item in enumerate(m):
                     matrix_sum[n] += item
+
+            plt.xlabel('Steps')
+            plt.ylabel('Fitness mean')
+            plt.show()
+            plt.close()
 
             matrix_mean = list(map(lambda m: m/len(matrix), matrix_sum))
 
 
-            plt.title('Simulations')
+            plt.title('Simulations mean')
             plt.xlabel('Steps')
             plt.ylabel('Fitness mean')
             plt.plot(matrix_mean, '.r')
