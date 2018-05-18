@@ -29,9 +29,9 @@ class ViewQueens(object):
 
                 for col, row in enumerate(chromosome):
                     if (col + row) % 2 == 0:
-                        clone_m[row][col] = fg_black(' Q ')
+                        clone_m[row][col] = fg_black(' \u265B ')
                     else:
-                        clone_m[row][col] = fg_white(' Q ')
+                        clone_m[row][col] = fg_white(' \u2655 ')
 
                 print(f'Individual: {ind}')
                 for m in clone_m:
@@ -66,9 +66,9 @@ class ViewQueens(object):
 
                 for col, row in enumerate(chromosome):
                     if (col + row) % 2 == 0:
-                        clone_m[row][col] = fg_black(' Q ')
+                        clone_m[row][col] = fg_black(' \u265B ')
                     else:
-                        clone_m[row][col] = fg_white(' Q ')
+                        clone_m[row][col] = fg_white(' \u2655 ')
 
                 print(f'Fitness: {chromo_fitness}')
                 for m in clone_m:

@@ -1,31 +1,49 @@
 #!/usr/bin/env python3
 import pylab as plt
 import os
+import pathlib
 
 
 if __name__ == "__main__":
+    path = pathlib.Path('./outputs')
+    path_data = path.glob('**/*.dat')
 
-    pathout = os.getcwd() + '/outputs/'
+    for dataset in path_data:
 
-    list_files = os.listdir(pathout)
+        if 'bests' in dataset.absolute().as_posix():
 
-    for dataset in list_files:
-        path = pathout + dataset
+            matrix = [
+                [int(item) for item in lines if item.isdigit()]
+                for lines in dataset.read_text().split('\n')
+            ]
 
-        print(dataset)
+            matrix_sum = [0 for _ in matrix[0]]
 
-        if 'data-bests' in dataset:
+            posix = dataset.parent.as_posix().split("/")
 
-            with open(path) as arq:
+            title = ''
+            temp = ''
 
-                matrix = [
-                    [int(item) for item in line.strip().split(',') if item]
-                    for line in arq.readlines()
-                ]
+            for n, p in enumerate(posix):
+                if 'outputs' in p:
+                    continue
 
-            matrix_sum = [0 for _ in range(100)]
+                if any([p == label for label in [
+                    "initialization", "fitness",
+                    "selection", "evaluation", "crossover"]]):
+                    temp += '\n' + p + ':\n'
+                    continue
 
-            plt.title('Simulations all')
+                if '::' in p:
+                    temp += '\n'.join(p.split('::')) + ' '
+                else:
+                    temp += p + ' '
+
+                if n%2 == 0:
+                    title += temp
+                    temp = ''
+
+            plt.title(f'Simulations all\n{title}', size=8)
 
             for m in matrix:
                 plt.plot(m)
@@ -34,49 +52,77 @@ if __name__ == "__main__":
 
             plt.xlabel('Steps')
             plt.ylabel('Fitness bests')
+            plt.tight_layout()
             plt.show()
             plt.close()
 
+
             matrix_mean = list(map(lambda m: m/len(matrix), matrix_sum))
 
-            plt.title('Simulations mean')
+            plt.title(f'Simulations mean\n{title}', size=8)
             plt.plot(matrix_mean, '.r')
             plt.xlabel('Steps')
             plt.ylabel('Fitness bests')
+            plt.tight_layout()
             plt.show()
             plt.close()
 
-        elif 'data-average' in dataset:
+        # elif 'average' in dataset.absolute().as_posix():
 
-            with open(path) as arq:
+        #     matrix = [
+        #         [int(item) for item in lines if item.isdigit()]
+        #         for lines in dataset.read_text().split('\n')
+        #     ]
 
-                matrix = [
-                    [float(item) for item in line.strip().split(',') if item]
-                    for line in arq.readlines()
-                ]
+        #     print(matrix)
 
-            matrix_sum = [0 for _ in range(100)]
+        #     matrix_sum = [0 for _ in matrix[0]]
+        #     print(matrix_sum)
 
-            plt.title('Simulations all')
+        #     posix = dataset.parent.as_posix().split("/")
 
-            for m in matrix:
-                plt.plot(m)
+        #     title = ''
+        #     temp = ''
 
-                for n, item in enumerate(m):
-                    matrix_sum[n] += item
+        #     for n, p in enumerate(posix):
+        #         if 'outputs' in p:
+        #             continue
 
-            plt.xlabel('Steps')
-            plt.ylabel('Fitness mean')
-            plt.show()
-            plt.close()
+        #         if any([p == label for label in [
+        #             "initialization", "fitness",
+        #             "selection", "evaluation", "crossover"]]):
+        #             temp += '\n' + p + ':\n'
+        #             continue
 
-            matrix_mean = list(map(lambda m: m/len(matrix), matrix_sum))
+        #         if '::' in p:
+        #             temp += '\n'.join(p.split('::')) + ' '
+        #         else:
+        #             temp += p + ' '
+
+        #         if n%2 == 0:
+        #             title += temp
+        #             temp = ''
+
+        #     plt.title(f'Simulations all\n{title}', size=8)
+
+        #     for m in matrix:
+        #         plt.plot(m)
+        #         for n, item in enumerate(m):
+        #             matrix_sum[n] += item
+
+        #     plt.xlabel('Steps')
+        #     plt.ylabel('Fitness average')
+        #     plt.tight_layout()
+        #     plt.show()
+        #     plt.close()
 
 
-            plt.title('Simulations mean')
-            plt.xlabel('Steps')
-            plt.ylabel('Fitness mean')
-            plt.plot(matrix_mean, '.r')
+        #     matrix_mean = list(map(lambda m: m/len(matrix), matrix_sum))
 
-            plt.show()
-            plt.close()
+        #     plt.title(f'Simulations mean\n{title}', size=8)
+        #     plt.plot(matrix_mean, '.r')
+        #     plt.xlabel('Steps')
+        #     plt.ylabel('Fitness average')
+        #     plt.tight_layout()
+        #     plt.show()
+        #     plt.close()
