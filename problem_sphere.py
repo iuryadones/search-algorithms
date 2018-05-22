@@ -126,108 +126,46 @@ def run(obj, MAX_ITERATIONS=100, MAX_CHECK_FITNESS=10000, name_file='stacked',
     obj.show_best_five_individuals
 
 if __name__ == "__main__":
-    K = 8
+    K = 3
 
     parameters = dict(
-        alleles=[list(range(K)) for _ in range(K)],
+        alleles=[[-30, 30] for _ in range(K)],
         k=K,
+        individual=float,
         population=100,
         operator={
             'selection': selection.choice_pairs_in_batch,
             'crossover': crossover.one_point_mating,
             'mutation': mutation.n_gene,
-            'fitness': fitness.n_queens,
+            'fitness': fitness.sphere,
             'initialization': initialization.choice_yourself,
             'evaluation': evaluation.elitism
         },
         params={
             'initialization': {
-                'choice': random.choice
+                'choice': random.triangular
             },
             'selection': {
                 'batch': 5,
                 'choice_individual': random.choice,
             },
             'mutation': {
-                'n_point': 4,
+                'n_point': 1,
                 'choice_gene': random.randint,
                 'choice_individual': random.choice,
                 'mutation_gene': random.choice,
             },
             'crossover': {
-                'mating_point': 4,
+                'mating_point': 1,
             },
         }
     )
 
-    # parameters = dict(
-    #     alleles=[list(range(K)) for _ in range(K)],
-    #     k=K,
-    #     population=100,
-    #     operator={
-    #         'selection': selection.choice_pairs_in_batch,
-    #         'crossover': crossover.one_point_mating,
-    #         'mutation': mutation.n_swap,
-    #         'fitness': fitness.sphere,
-    #         'initialization': initialization.choice_yourself,
-    #         'evaluation': evaluation.elitism
-    #     },
-    #     params={
-    #         'initialization': {
-    #             'choice': random.choice
-    #         },
-    #         'selection': {
-    #             'batch': 5,
-    #             'choice_individual': random.choice,
-    #         },
-    #         'mutation': {
-    #             'n_point': 2,
-    #             'choice_gene': random.randint,
-    #             'choice_individual': random.choice,
-    #         },
-    #         'crossover': {
-    #             'mating_point': 4,
-    #         },
-    #     }
-    # )
-
-    # parameters = dict(
-    #     alleles=[list(range(K)) for _ in range(K)],
-    #     k=K,
-    #     population=100,
-    #     operator={
-    #         'selection': selection.elitism,
-    #         'crossover': crossover.one_point_mating,
-    #         'mutation': mutation.n_gene,
-    #         'fitness': fitness.n_queens,
-    #         'initialization': initialization.choice_yourself,
-    #         'evaluation': evaluation.elitism
-    #     },
-    #     params={
-    #         'initialization': {
-    #             'choice': random.choice
-    #         },
-    #         'selection': {
-    #             'n_best': 16,
-    #         },
-    #         'mutation': {
-    #             'n_point': 2,
-    #             'choice_gene': random.randint,
-    #             'choice_individual': random.choice,
-    #             'mutation_gene': random.choice,
-    #         },
-    #         'crossover': {
-    #             'mating_point': 4,
-    #         },
-    #     }
-    # )
-
-
     queens = Queens(**parameters)
 
-    name_chromossomes = 'chromosomes_0.pkl'
+    name_chromossomes = 'sphere_chromosomes_0.pkl'
 
-    if not os.path.exists(name_chromossomes):
+    if os.path.exists(name_chromossomes):
         queens.initialization
         pickle.dump(queens.chromosomes[::], open(name_chromossomes, "wb" ))
         chromosomes_base = pickle.load(open(name_chromossomes, "rb" ))

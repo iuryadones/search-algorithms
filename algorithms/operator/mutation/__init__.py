@@ -25,7 +25,21 @@ def n_gene(self):
         while (len(random_choice) < n_point):
             gene = choice_gene(0, len(self.alleles)-1)
             if not (gene in random_choice):
-                chromosome[gene] += mutation_gene([-1, 1])
+
+                if issubclass(self.individual, float):
+                    chromosome[gene] += mutation_gene([-1, 1])
+                elif issubclass(self.individual, int):
+                    chromosome[gene] += mutation_gene([-1, 1])
+                elif issubclass(self.individual, list):
+                    chromosome[gene] += mutation_gene([-1, 1])
+                else:
+                    chromosome[gene] += mutation_gene([-1, 1])
+
+                if chromosome[gene] < min(self.alleles[gene]):
+                    chromosome[gene] = max(self.alleles[gene])
+                elif chromosome[gene] > max(self.alleles[gene]):
+                    chromosome[gene] = min(self.alleles[gene])
+
                 random_choice.append(gene)
 
         self.parents['mutation'].append(chromosome)

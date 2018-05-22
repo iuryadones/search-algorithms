@@ -38,3 +38,37 @@ def n_queens(self):
     return sorted(chromosomes_fitness,
                   key=lambda chromo_fitness: chromo_fitness[1])
 
+
+def sphere(self):
+
+    if self.params.get('fitness', {}).get('chromosomes'):
+        chromosomes = [
+            chromosome
+            for chromosome in self.params['fitness'].get('chromosomes')
+        ]
+        self.params['fitness']['chromosomes'].clear()
+
+    else:
+        chromosomes = self.chromosomes
+
+    chromosomes_fitness = []
+    for chromosome in chromosomes:
+        chromosome_str = ','.join([f'{gene}' for gene in chromosome])
+        chromosome_resp = self._memoize_fitness.get(chromosome_str)
+
+        if not chromosome_resp:
+
+            resp = [(gene ** 2) for gene in chromosome]
+
+            chromosome_resp = sum(resp)
+
+            self._counter_fitness += 1
+            self._memoize_fitness[chromosome_str] = chromosome_resp
+
+            chromosomes_fitness.append([chromosome, chromosome_resp])
+
+        else:
+            chromosomes_fitness.append([chromosome, chromosome_resp])
+
+    return sorted(chromosomes_fitness,
+                  key=lambda chromo_fitness: chromo_fitness[1])
