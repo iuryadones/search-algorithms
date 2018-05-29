@@ -39,7 +39,10 @@ def n_queens(self):
                   key=lambda chromo_fitness: chromo_fitness[1])
 
 
-def sphere(self):
+def benchmark(self):
+
+    problem = self.params.get('fitness', {}).get('problem')
+    otimization = self.params.get('fitness', {}).get('otimization')
 
     if self.params.get('fitness', {}).get('chromosomes'):
         chromosomes = [
@@ -57,10 +60,7 @@ def sphere(self):
         chromosome_resp = self._memoize_fitness.get(chromosome_str)
 
         if not chromosome_resp:
-
-            resp = [(gene ** 2) for gene in chromosome]
-
-            chromosome_resp = sum(resp)
+            chromosome_resp = problem(chromosome)
 
             self._counter_fitness += 1
             self._memoize_fitness[chromosome_str] = chromosome_resp
@@ -70,5 +70,11 @@ def sphere(self):
         else:
             chromosomes_fitness.append([chromosome, chromosome_resp])
 
-    return sorted(chromosomes_fitness,
+    if otimization == 'min':
+        return sorted(chromosomes_fitness,
                   key=lambda chromo_fitness: chromo_fitness[1])
+
+    elif otimization == 'max':
+        return sorted(chromosomes_fitness,
+                  key=lambda chromo_fitness: chromo_fitness[1], reverse=True)
+

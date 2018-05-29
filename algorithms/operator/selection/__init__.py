@@ -46,7 +46,9 @@ def choice_pairs_in_batch(self):
     ]
 
     for chunck in chuncks:
-        self.params['fitness'] = {'chromosomes': [c[::] for c in chunck]}
+
+        self.params['fitness'].update({'chromosomes': [c[::] for c in chunck]})
+
         self.parents['individual'].extend(
             [
                 chunck.pop(chunck.index(chromosome))
@@ -54,6 +56,7 @@ def choice_pairs_in_batch(self):
                 if n < 2
             ]
         )
+
         self.chromosomes.extend(chunck)
 
 
