@@ -6,10 +6,10 @@ import numpy as np
 
 
 if __name__ == "__main__":
-    path = pathlib.Path('./outputs')
-    path_data = path.glob('**/*.dat')
+    path = pathlib.Path("./outputs")
+    path_data = path.glob("**/*.dat")
 
-    problems = ['rosenbrock', 'sphere', 'rastrigin', 'zakharov']
+    problems = ["rosenbrock", "sphere", "rastrigin", "zakharov"]
 
     step_bests = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
 
@@ -19,22 +19,22 @@ if __name__ == "__main__":
 
     for _id, dataset in enumerate(path_data, 1):
 
-        if 'bests' in dataset.absolute().as_posix():
+        if "bests" in dataset.absolute().as_posix():
 
             matrix = []
-            for lines in dataset.read_text().split('\n'):
+            for lines in dataset.read_text().split("\n"):
                 if lines:
                     temp = []
-                    for item in lines.split(','):
+                    for item in lines.split(","):
                         temp.append(float(item))
                     matrix.append(temp)
 
             posix = dataset.parent.as_posix().split("/")
             posix.pop(0)
-            method = '\n'.join(posix)
+            method = "\n".join(posix)
 
-            print(f'N Parameters: {_id}', end='\n\n')
-            print(method, end='\n\n')
+            print(f"N Parameters: {_id}", end="\n\n")
+            print(method, end="\n\n")
 
             matrix = np.array(matrix)
 
@@ -43,71 +43,84 @@ if __name__ == "__main__":
                     if problem in method:
                         if not boxplot_bests[problem].get(step):
                             boxplot_bests[problem][step] = {
-                                'method': [],
-                                'data': []
+                                "method": [],
+                                "data": [],
                             }
-                            boxplot_bests[problem][step]['method'].append(_id)
-                            boxplot_bests[problem][step]['data'].append(matrix[:, step])
+                            boxplot_bests[problem][step]["method"].append(_id)
+                            boxplot_bests[problem][step]["data"].append(
+                                matrix[:, step]
+                            )
                         else:
-                            boxplot_bests[problem][step]['method'].append(_id)
-                            boxplot_bests[problem][step]['data'].append(matrix[:, step])
+                            boxplot_bests[problem][step]["method"].append(_id)
+                            boxplot_bests[problem][step]["data"].append(
+                                matrix[:, step]
+                            )
 
             matrix_sum = [0 for _ in matrix[0]]
 
-            title = ''
-            temp = ''
+            title = ""
+            temp = ""
 
             posix = dataset.parent.as_posix().split("/")
             for n, p in enumerate(posix):
-                if 'outputs' in p:
+                if "outputs" in p:
                     continue
 
-                if any([p == label for label in [
-                    "initialization", "fitness",
-                    "selection", "evaluation", "crossover"]]):
-                    temp += '\n' + p + ':\n'
+                if any(
+                    [
+                        p == label
+                        for label in [
+                            "initialization",
+                            "fitness",
+                            "selection",
+                            "evaluation",
+                            "crossover",
+                        ]
+                    ]
+                ):
+                    temp += "\n" + p + ":\n"
                     continue
 
-                if '::' in p:
-                    temp += '\n'.join(p.split('::')) + ' '
+                if "::" in p:
+                    temp += "\n".join(p.split("::")) + " "
                 else:
-                    temp += p + ' '
+                    temp += p + " "
 
                 if n % 2 == 0:
                     title += temp
-                    temp = ''
+                    temp = ""
 
-            plt.title(f'Simulations all\n{title}', size=8)
+            plt.title(f"Simulations all\n{title}", size=8)
 
             for m in matrix:
                 plt.plot(m)
                 for n, item in enumerate(m):
                     matrix_sum[n] += item
 
-            plt.xlabel('Steps')
-            plt.ylabel('Fitness bests')
+            plt.xlabel("Steps")
+            plt.ylabel("Fitness bests")
             plt.tight_layout()
             plt.show()
             plt.close()
 
-            matrix_mean = list(map(lambda m: m/len(matrix), matrix_sum))
+            matrix_mean = list(map(lambda m: m / len(matrix), matrix_sum))
 
-            plt.title(f'Simulations mean\n{title}', size=8)
-            plt.plot(matrix_mean, '.r')
-            plt.xlabel('Steps')
-            plt.ylabel('Fitness bests')
+            plt.title(f"Simulations mean\n{title}", size=8)
+            plt.plot(matrix_mean, ".r")
+            plt.xlabel("Steps")
+            plt.ylabel("Fitness bests")
             plt.tight_layout()
             plt.show()
             plt.close()
 
-        elif 'average' in dataset.absolute().as_posix():
+        elif "average" in dataset.absolute().as_posix():
             continue
 
             matrix = []
-            for lines in dataset.read_text().split('\n'):
+            for lines in dataset.read_text().split("\n"):
                 if lines:
                     temp = []
-                    for item in lines.split(','):
+                    for item in lines.split(","):
                         temp.append(float(item))
                     matrix.append(temp)
 
@@ -115,47 +128,56 @@ if __name__ == "__main__":
 
             posix = dataset.parent.as_posix().split("/")
 
-            title = ''
-            temp = ''
+            title = ""
+            temp = ""
 
             for n, p in enumerate(posix):
-                if 'outputs' in p:
+                if "outputs" in p:
                     continue
 
-                if any([p == label for label in [
-                    "initialization", "fitness",
-                    "selection", "evaluation", "crossover"]]):
-                    temp += '\n' + p + ':\n'
+                if any(
+                    [
+                        p == label
+                        for label in [
+                            "initialization",
+                            "fitness",
+                            "selection",
+                            "evaluation",
+                            "crossover",
+                        ]
+                    ]
+                ):
+                    temp += "\n" + p + ":\n"
                     continue
 
-                if '::' in p:
-                    temp += '\n'.join(p.split('::')) + ' '
+                if "::" in p:
+                    temp += "\n".join(p.split("::")) + " "
                 else:
-                    temp += p + ' '
+                    temp += p + " "
 
-                if n%2 == 0:
+                if n % 2 == 0:
                     title += temp
-                    temp = ''
+                    temp = ""
 
-            plt.title(f'Simulations all\n{title}', size=8)
+            plt.title(f"Simulations all\n{title}", size=8)
 
             for m in matrix:
                 plt.plot(m)
                 for n, item in enumerate(m):
                     matrix_sum[n] += item
 
-            plt.xlabel('Steps')
-            plt.ylabel('Fitness average')
+            plt.xlabel("Steps")
+            plt.ylabel("Fitness average")
             plt.tight_layout()
             plt.show()
             plt.close()
 
-            matrix_mean = list(map(lambda m: m/len(matrix), matrix_sum))
+            matrix_mean = list(map(lambda m: m / len(matrix), matrix_sum))
 
-            plt.title(f'Simulations mean\n{title}', size=8)
-            plt.plot(matrix_mean, '.r')
-            plt.xlabel('Steps')
-            plt.ylabel('Fitness average')
+            plt.title(f"Simulations mean\n{title}", size=8)
+            plt.plot(matrix_mean, ".r")
+            plt.xlabel("Steps")
+            plt.ylabel("Fitness average")
             plt.tight_layout()
             plt.show()
             plt.close()
@@ -163,11 +185,11 @@ if __name__ == "__main__":
     for problem in problems:
         for step in step_bests:
             plt.boxplot(
-                boxplot_bests[problem][step]['data'],
-                labels=boxplot_bests[problem][step]['method'],
-                showmeans=True
+                boxplot_bests[problem][step]["data"],
+                labels=boxplot_bests[problem][step]["method"],
+                showmeans=True,
             )
-            plt.title(f'Problem {problem}\nThe bests in step {step}')
+            plt.title(f"Problem {problem}\nThe bests in step {step}")
             plt.tight_layout()
             plt.show()
             plt.close()

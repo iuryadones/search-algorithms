@@ -1,8 +1,8 @@
 __all__ = [
-    'crossover',
-    'evaluation',
-    'fitness',
-    'initialization',
-    'mutation',
-    'selection',
+    "crossover",
+    "evaluation",
+    "fitness",
+    "initialization",
+    "mutation",
+    "selection",
 ]

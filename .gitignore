@@ -1,3 +1,6 @@
-__pycache__/
+*.pickle
+*.pkl
 *.py[cod]
+__pycache__/
+__pycache__/*
 outputs/
