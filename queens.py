@@ -137,7 +137,7 @@ def run(
 
     # obj.plot_average_bests(average, bests)
     # obj.plot_bests(bests)
-    # obj.show_chromosomes_fitness
+    obj.show_chromosomes_fitness
     obj.show_best_five_individuals
 
 
